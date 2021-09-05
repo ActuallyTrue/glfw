@@ -1,123 +1,75 @@
-workspace "Hazel"
-	architecture "x64"
-
-	configurations
-	{
-		"Debug",
-		"Release",
-		"Dist"
-	}
-	startproject "Sandbox"
-
-outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
-
---Include directories relative to root folder (solution directory)
-IncludeDir = {}
-IncludeDir["GLFW"] = "Hazel/vendor/GLFW/include"
-
-include "Hazel/vendor/GLFW" --this copies and pastes the GLFW premake file into this premake file.
-
-project "Hazel"
-	location "Hazel"
-	kind "SharedLib"
-	language "C++"
+project "GLFW"
+	kind "StaticLib"
+	language "C"
+	staticruntime "off"
 
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
-
-	pchheader "hzpch.h"
-	pchsource "Hazel/src/hzpch.cpp"
 
 	files
 	{
-		"%{prj.name}/src/**.h",
-		"%{prj.name}/src/**.cpp"
+		"include/GLFW/glfw3.h",
+		"include/GLFW/glfw3native.h",
+		"src/glfw_config.h",
+		"src/context.c",
+		"src/init.c",
+		"src/input.c",
+		"src/monitor.c",
+		"src/vulkan.c",
+		"src/window.c"
 	}
+	filter "system:linux"
+		pic "On"
 
-	includedirs
-	{
-		"%{prj.name}/src",
-		"%{prj.name}/vendor/spdlog/include",
-		"%{IncludeDir.GLFW}"
-	}
-
-	links
-	{
-		"GLFW",
-		"opengl32.lib"
-	}
-
-	filter "system:windows"
-		cppdialect "C++17"
-		staticruntime "On"
 		systemversion "latest"
+		
+		files
+		{
+			"src/x11_init.c",
+			"src/x11_monitor.c",
+			"src/x11_window.c",
+			"src/xkb_unicode.c",
+			"src/posix_time.c",
+			"src/posix_thread.c",
+			"src/glx_context.c",
+			"src/egl_context.c",
+			"src/osmesa_context.c",
+			"src/linux_joystick.c"
+		}
 
 		defines
 		{
-			"HZ_PLATFORM_WINDOWS",
-			"HZ_BUILD_DLL",
+			"_GLFW_X11"
 		}
-
-		postbuildcommands
-		{
-			("{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/Sandbox")
-		}
-
-	filter "configurations:Debug"
-		defines "HZ_DEBUG"
-		symbols "On"
-
-	filter "configurations:Release"
-		defines "HZ_RELEASE"
-		optimize "On"
-
-	filter "configurations:Dist"
-		defines "HZ_DIST"
-		optimize "On"
-
-project "Sandbox"
-	location "Sandbox"
-	kind "ConsoleApp"
-	language "C++"
-
-	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
-	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
-
-	files 
-	{
-		"%{prj.name}/src/**.h",
-		"%{prj.name}/src/**.cpp"
-	}
-
-	includedirs
-	{
-		"Hazel/vendor/spdlog/include",
-		"Hazel/src"
-	}
-
-	links
-	{
-		"Hazel"
-	}
 
 	filter "system:windows"
-		cppdialect "C++17"
-		staticruntime "On"
 		systemversion "latest"
 
-		defines
+		files
 		{
-			"HZ_PLATFORM_WINDOWS"
+			"src/win32_init.c",
+			"src/win32_joystick.c",
+			"src/win32_monitor.c",
+			"src/win32_time.c",
+			"src/win32_thread.c",
+			"src/win32_window.c",
+			"src/wgl_context.c",
+			"src/egl_context.c",
+			"src/osmesa_context.c"
+		}
+
+		defines 
+		{ 
+			"_GLFW_WIN32",
+			"_CRT_SECURE_NO_WARNINGS"
 		}
 
 	filter "configurations:Debug"
-		defines "HZ_DEBUG"
-		symbols "On"
+    	runtime "Debug"
+    	buildoptions "/MTd"
+        symbols "on"
 
 	filter "configurations:Release"
-		defines "HZ_RELEASE"
-		optimize "On"
-
-	filter "configurations:Dist"
-		defines "HZ_DIST"
-		optimize "On"
+        runtime "Release"
+        buildoptions "/MT"
+        optimize "on"
